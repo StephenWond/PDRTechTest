@@ -17,13 +17,13 @@ namespace PDR.PatientBooking.Service.BookingServices
 
         public BookingService(
             PatientBookingContext context,
-            ISystemClock systemClock,
-            IBookingRequestValidator validator
+            IBookingRequestValidator validator,
+            ISystemClock systemClock
         )
         {
             _context = context;
-            _systemClock = systemClock;
             _validator = validator;
+            _systemClock = systemClock;
         }
 
         public GetBookingResponse GetNextBooking(long patientId)

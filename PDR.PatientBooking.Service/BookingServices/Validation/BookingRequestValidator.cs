@@ -8,12 +8,12 @@ using PDR.PatientBooking.Service.Validation;
 
 namespace PDR.PatientBooking.Service.BookingServices.Validation
 {
-    public class BookingRequestValidation : IBookingRequestValidator
+    public class BookingRequestValidator : IBookingRequestValidator
     {
         private readonly PatientBookingContext _context;
         private readonly ISystemClock _systemClock;
 
-        public BookingRequestValidation(PatientBookingContext context, ISystemClock systemClock)
+        public BookingRequestValidator(PatientBookingContext context, ISystemClock systemClock)
         {
             _context = context;
             _systemClock = systemClock;
