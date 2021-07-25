@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using AutoFixture;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Internal;
 using Moq;
 using NUnit.Framework;
 using PDR.PatientBooking.Data;
@@ -26,6 +26,7 @@ namespace PDR.PatientBooking.Service.Tests.PatientServices
 
         private PatientBookingContext _context;
         private Mock<IAddPatientRequestValidator> _validator;
+        private Mock<ISystemClock> _systemClock;
 
         private PatientService _patientService;
 
@@ -42,6 +43,7 @@ namespace PDR.PatientBooking.Service.Tests.PatientServices
             // Mock setup
             _context = new PatientBookingContext(new DbContextOptionsBuilder<PatientBookingContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
             _validator = _mockRepository.Create<IAddPatientRequestValidator>();
+            _systemClock = new Mock<ISystemClock>();
 
             // Mock default
             SetupMockDefaults();
@@ -49,14 +51,20 @@ namespace PDR.PatientBooking.Service.Tests.PatientServices
             // Sut instantiation
             _patientService = new PatientService(
                 _context,
-                _validator.Object
+                _validator.Object,
+                _systemClock.Object
             );
         }
 
         private void SetupMockDefaults()
         {
-            _validator.Setup(x => x.ValidateRequest(It.IsAny<AddPatientRequest>()))
+            _validator
+                .Setup(x => x.ValidateRequest(It.IsAny<AddPatientRequest>()))
                 .Returns(new PdrValidationResult(true));
+            
+            _systemClock
+                .Setup(x => x.UtcNow)
+                .Returns(DateTime.UtcNow);
         }
 
         [Test]
@@ -102,7 +110,7 @@ namespace PDR.PatientBooking.Service.Tests.PatientServices
                 DateOfBirth = request.DateOfBirth,
                 Orders = new List<Order>(),
                 ClinicId = request.ClinicId,
-                Created = DateTime.UtcNow
+                Created = _systemClock.Object.UtcNow.UtcDateTime
             };
 
             //act

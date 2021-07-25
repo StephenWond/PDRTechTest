@@ -14,6 +14,7 @@ using PDR.PatientBooking.Service.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Internal;
 
 namespace PDR.PatientBooking.Service.Tests.DoctorServices
 {
@@ -25,6 +26,7 @@ namespace PDR.PatientBooking.Service.Tests.DoctorServices
 
         private PatientBookingContext _context;
         private Mock<IAddDoctorRequestValidator> _validator;
+        private Mock<ISystemClock> _systemClock;
 
         private DoctorService _doctorService;
 
@@ -41,6 +43,7 @@ namespace PDR.PatientBooking.Service.Tests.DoctorServices
             // Mock setup
             _context = new PatientBookingContext(new DbContextOptionsBuilder<PatientBookingContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
             _validator = _mockRepository.Create<IAddDoctorRequestValidator>();
+            _systemClock = new Mock<ISystemClock>();
 
             // Mock default
             SetupMockDefaults();
@@ -48,14 +51,20 @@ namespace PDR.PatientBooking.Service.Tests.DoctorServices
             // Sut instantiation
             _doctorService = new DoctorService(
                 _context,
-                _validator.Object
+                _validator.Object,
+                _systemClock.Object
             );
         }
 
         private void SetupMockDefaults()
         {
-            _validator.Setup(x => x.ValidateRequest(It.IsAny<AddDoctorRequest>()))
+            _validator
+                .Setup(x => x.ValidateRequest(It.IsAny<AddDoctorRequest>()))
                 .Returns(new PdrValidationResult(true));
+            
+            _systemClock
+                .Setup(x => x.UtcNow)
+                .Returns(DateTime.UtcNow);
         }
 
         [Test]
@@ -100,7 +109,7 @@ namespace PDR.PatientBooking.Service.Tests.DoctorServices
                 Email = request.Email,
                 DateOfBirth = request.DateOfBirth,
                 Orders = new List<Order>(),
-                Created = DateTime.UtcNow
+                Created = _systemClock.Object.UtcNow.UtcDateTime
             };
 
             //act
