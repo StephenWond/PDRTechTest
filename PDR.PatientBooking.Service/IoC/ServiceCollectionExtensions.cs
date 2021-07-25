@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using PDR.PatientBooking.Service.BookingServices;
+using PDR.PatientBooking.Service.BookingServices.Validation;
 using PDR.PatientBooking.Service.ClinicServices;
 using PDR.PatientBooking.Service.ClinicServices.Validation;
 using PDR.PatientBooking.Service.DoctorServices;
@@ -23,6 +24,7 @@ namespace PDR.PatientBooking.Service.IoC
             collection.AddScoped<IAddClinicRequestValidator, AddClinicRequestValidator>();
 
             collection.AddScoped<IBookingService, BookingService>();
+            collection.AddScoped<IBookingRequestValidator, BookingRequestValidation>();
         }
     }
 }
