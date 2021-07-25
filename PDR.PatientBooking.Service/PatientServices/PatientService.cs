@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using PDR.PatientBooking.Data;
+﻿using PDR.PatientBooking.Data;
 using PDR.PatientBooking.Data.Models;
 using PDR.PatientBooking.Service.Enums;
 using PDR.PatientBooking.Service.PatientServices.Requests;
@@ -8,6 +7,7 @@ using PDR.PatientBooking.Service.PatientServices.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Internal;
 
 namespace PDR.PatientBooking.Service.PatientServices
 {
@@ -15,11 +15,17 @@ namespace PDR.PatientBooking.Service.PatientServices
     {
         private readonly PatientBookingContext _context;
         private readonly IAddPatientRequestValidator _validator;
+        private readonly ISystemClock _systemClock;
 
-        public PatientService(PatientBookingContext context, IAddPatientRequestValidator validator)
+        public PatientService(
+            PatientBookingContext context,
+            IAddPatientRequestValidator validator,
+            ISystemClock systemClock
+        )
         {
             _context = context;
             _validator = validator;
+            _systemClock = systemClock;
         }
 
         public void AddPatient(AddPatientRequest request)
@@ -35,12 +41,12 @@ namespace PDR.PatientBooking.Service.PatientServices
             {
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                Gender = (int)request.Gender,
+                Gender = (int) request.Gender,
                 Email = request.Email,
                 DateOfBirth = request.DateOfBirth,
                 Orders = new List<Order>(),
                 ClinicId = request.ClinicId,
-                Created = DateTime.UtcNow
+                Created = _systemClock.UtcNow.UtcDateTime
             });
 
             _context.SaveChanges();
@@ -57,7 +63,7 @@ namespace PDR.PatientBooking.Service.PatientServices
                     LastName = x.LastName,
                     Email = x.Email,
                     DateOfBirth = x.DateOfBirth,
-                    Gender = (Gender)x.Gender,
+                    Gender = (Gender) x.Gender,
                     Clinic = new GetAllPatientsResponse.Clinic
                     {
                         Id = x.ClinicId,

@@ -8,6 +8,7 @@ using PDR.PatientBooking.Service.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Internal;
 
 namespace PDR.PatientBooking.Service.DoctorServices
 {
@@ -15,11 +16,17 @@ namespace PDR.PatientBooking.Service.DoctorServices
     {
         private readonly PatientBookingContext _context;
         private readonly IAddDoctorRequestValidator _validator;
+        private readonly ISystemClock _systemClock;
 
-        public DoctorService(PatientBookingContext context, IAddDoctorRequestValidator validator)
+        public DoctorService(
+            PatientBookingContext context,
+            IAddDoctorRequestValidator validator,
+            ISystemClock systemClock
+        )
         {
             _context = context;
             _validator = validator;
+            _systemClock = systemClock;
         }
 
         public void AddDoctor(AddDoctorRequest request)
@@ -35,11 +42,11 @@ namespace PDR.PatientBooking.Service.DoctorServices
             {
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                Gender = (int)request.Gender,
+                Gender = (int) request.Gender,
                 Email = request.Email,
                 DateOfBirth = request.DateOfBirth,
                 Orders = new List<Order>(),
-                Created = DateTime.UtcNow
+                Created = _systemClock.UtcNow.UtcDateTime
             });
 
             _context.SaveChanges();
@@ -56,7 +63,7 @@ namespace PDR.PatientBooking.Service.DoctorServices
                     LastName = x.LastName,
                     Email = x.Email,
                     DateOfBirth = x.DateOfBirth,
-                    Gender = (Gender)x.Gender
+                    Gender = (Gender) x.Gender
                 })
                 .AsNoTracking()
                 .ToList();

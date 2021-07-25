@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Internal;
 using Microsoft.OpenApi.Models;
 using PDR.PatientBooking.Data;
 using PDR.PatientBooking.Service.IoC;
@@ -24,8 +25,8 @@ namespace PDR.PatientBookingApi
         {
             services.AddControllers();
             services.AddDbContext<PatientBookingContext>(options => options
-                    .UseInMemoryDatabase(databaseName: "PatientBooking")
-                    .UseLazyLoadingProxies()
+                .UseInMemoryDatabase(databaseName: "PatientBooking")
+                .UseLazyLoadingProxies()
             );
 
             services.AddSwaggerGen(c =>
@@ -34,6 +35,7 @@ namespace PDR.PatientBookingApi
             });
 
             services.RegisterPatientBookingServices();
+            services.AddSingleton<ISystemClock, SystemClock>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -50,10 +52,7 @@ namespace PDR.PatientBookingApi
 
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
             app.UseSwagger();
 
