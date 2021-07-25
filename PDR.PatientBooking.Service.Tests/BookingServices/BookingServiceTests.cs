@@ -122,6 +122,7 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
                 StartTime = request.StartTime,
                 EndTime = request.EndTime,
                 SurgeryType = 0,
+                IsDeleted = false,
                 PatientId = request.PatientId,
                 DoctorId = request.DoctorId,
                 Patient = patient,
@@ -165,10 +166,27 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
         }
 
         [Test]
+        public void GetNextBookingByPatientId_DeletedBooking_ReturnsEmptyResponse()
+        {
+            //arrange
+            var request = _fixture.Create<Order>();
+            request.IsDeleted = true;
+            _context.Order.Add(request);
+            _context.SaveChanges();
+
+            //act
+            var res = _bookingService.GetNextBooking(request.PatientId);
+
+            //assert
+            res.Should().BeNull();
+        }
+
+        [Test]
         public void GetNextBookingByPatientId_ReturnsNextBooking()
         {
             //arrange
             var request = _fixture.Create<Order>();
+            request.IsDeleted = false;
             request.StartTime = DateTime.UtcNow.AddMinutes(1);
             request.EndTime = DateTime.UtcNow.AddMinutes(2);
             _context.Order.Add(request);
@@ -189,6 +207,56 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
 
             //assert
             res.Should().BeEquivalentTo(expected);
+        }
+
+        [Test]
+        public void DeleteBooking_ValidatorFails_ThrowsArgumentException()
+        {
+            //arrange
+            var failedValidationResult = new PdrValidationResult(false, _fixture.Create<string>());
+            _validator.Setup(x => x.ValidateRequest(It.IsAny<Guid>())).Returns(failedValidationResult);
+
+            //act
+            var exception =
+                Assert.Throws<ArgumentException>(() =>
+                    _bookingService.DeleteBooking(_fixture.Create<Guid>()));
+
+            //assert
+            exception.Message.Should().Be(failedValidationResult.Errors.First());
+        }
+
+        [Test]
+        public void DeleteBooking_IsDeletedFlagTrue()
+        {
+            //arrange
+            var request = _fixture.Create<Order>();
+            request.IsDeleted = false;
+            _context.Order.Add(request);
+            _context.SaveChanges();
+
+            var expected = new Order
+            {
+                Id = request.Id,
+                StartTime = request.StartTime,
+                EndTime = request.EndTime,
+                SurgeryType = 0,
+                IsDeleted = true,
+                PatientId = request.PatientId,
+                DoctorId = request.DoctorId,
+                Patient = null,
+                Doctor = null
+            };
+
+            //act
+            _bookingService.DeleteBooking(request.Id);
+
+            //assert
+            _context.Order.Should().ContainEquivalentOf(
+                expected,
+                options => options
+                    .Including(order => order.Id)
+                    .Including(order => order.IsDeleted)
+            );
         }
 
         [TearDown]
