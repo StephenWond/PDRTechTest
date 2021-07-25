@@ -39,7 +39,8 @@ namespace PDR.PatientBooking.Service.BookingServices
                 _context.Order
                     .Where(x =>
                         x.PatientId == patientId &&
-                        x.StartTime > _systemClock.UtcNow.UtcDateTime)
+                        x.StartTime > _systemClock.UtcNow.UtcDateTime &&
+                        !x.IsDeleted)
                     .OrderBy(x => x.StartTime)
                     .FirstOrDefault();
 
@@ -81,6 +82,20 @@ namespace PDR.PatientBooking.Service.BookingServices
                 }
             );
 
+            _context.SaveChanges();
+        }
+
+        public void DeleteBooking(Guid bookingId)
+        {
+            var validationResult = _validator.ValidateRequest(bookingId);
+
+            if (!validationResult.PassedValidation)
+            {
+                throw new ArgumentException(validationResult.Errors.First());
+            }
+
+            var booking = _context.Order.FirstOrDefault(x => x.Id == bookingId);
+            booking.IsDeleted = true;
             _context.SaveChanges();
         }
     }

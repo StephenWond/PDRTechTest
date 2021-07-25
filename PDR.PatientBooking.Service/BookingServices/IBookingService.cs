@@ -1,3 +1,4 @@
+using System;
 using PDR.PatientBooking.Service.BookingServices.Requests;
 using PDR.PatientBooking.Service.BookingServices.Responses;
 
@@ -7,5 +8,6 @@ namespace PDR.PatientBooking.Service.BookingServices
     {
         GetBookingResponse GetNextBooking(long patientId);
         void AddBooking(AddBookingRequest request);
+        void DeleteBooking(Guid bookingId);
     }
 }

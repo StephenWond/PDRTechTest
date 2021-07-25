@@ -50,5 +50,23 @@ namespace PDR.PatientBookingApi.Controllers
                 return StatusCode(500, ex);
             }
         }
+
+        [HttpDelete("{bookingId}")]
+        public IActionResult DeleteBooking(Guid bookingId)
+        {
+            try
+            {
+                _bookingService.DeleteBooking(bookingId);
+                return Ok();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
+        }
     }
 }
